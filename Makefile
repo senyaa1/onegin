@@ -15,7 +15,7 @@ prepare:
 	mkdir -p ${OUTDIR} 
 
 clean:
-	rm -rf ${OUTDIR} 
+	rm -rf ${OUTDIR}/*
 
 all: prepare main 
 
