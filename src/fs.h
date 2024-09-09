@@ -6,7 +6,6 @@
 extern size_t poem_lines;
 extern char** poem;
 
-void print_strings(const char** arr, size_t size, const char* title);
 bool load_poem(const char* poem_path);
 void unload_poem();
 

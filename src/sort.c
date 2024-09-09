@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 static void memswap(void* a, void* b, size_t len)
 {
@@ -44,23 +45,42 @@ void random_sort(char** ptr, size_t cnt, int(*comparator)(const char*, const cha
 	}
 }
 
+static bool is_punctuation(char c) 
+{
+	return strchr("!\"#$%&'()*+,./:;<=>?@[\\]^_`{|}~ «»", c) != NULL;
+}
+
 int str_comparator(const void* in_a, const void* in_b)
 {
 	char* a = *(char**)in_a;
 	char* b = *(char**)in_b;
 
-	size_t len_a = strlen(a);
-	size_t len_b = strlen(b);
-	
-	for(size_t i = 0; i < ((len_a < len_b) ? len_a : len_b); i++)
+	size_t len_a = strlen(a), len_b = strlen(b);
+	size_t min_len = ((len_a < len_b) ? len_a : len_b);
+
+	size_t a_ptr = 0, b_ptr = 0;
+
+	while(a_ptr < min_len && b_ptr < min_len)
 	{
-		if(a[i] == b[i])
+		while(is_punctuation(a[a_ptr]) && a_ptr < min_len)
+		{
+			a_ptr++;
+		}
+
+		while(is_punctuation(b[b_ptr]) && b_ptr < min_len)
+		{
+			b_ptr++;
+		}
+
+		if(a[a_ptr] == b[b_ptr])
+		{
+			a_ptr++;
+			b_ptr++;
 			continue;
-		return (a[i] < b[i]) ? -1 : 1;
+		}
+
+		return (a[a_ptr] < b[b_ptr]) ? -1 : 1;
 	}
-
-	if (len_a != len_b)
-		return (len_a < len_b) ? -1 : 1;
-
+	
 	return 0;
 }

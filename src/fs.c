@@ -38,6 +38,9 @@ bool load_poem(const char* poem_path)
 	munmap(fileptr, sz);
 	close(fd);
 
+	// convert newlines to str terminators and store pointers to them 
+	// we can also store strlen of the string in the MSBs of the pointers, so that strlens won't recompute on sort
+	// but for now we leave it as is
 	size_t cur_len = 0;
 	poem_lines = 0;
 	for(size_t i = 0; i < sz; i++)
