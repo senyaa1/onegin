@@ -27,9 +27,7 @@ int main(int argc, char** argv)
 
 	if(!load_poem(argv[1]))
 	{
-		fprintf(stderr, "Can't read poem!\n!");
-
-		unload_poem();
+		fprintf(stderr, "Can't read poem!\n");
 		return -1;
 	}
 	
