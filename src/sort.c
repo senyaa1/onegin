@@ -5,7 +5,7 @@
 #include <wchar.h>
 #include <wctype.h>
 
-static void memswap(void* a, void* b, size_t len)
+static inline void memswap(void* a, void* b, size_t len)
 {
 	void* buf = calloc(len, 1);
 
@@ -14,6 +14,13 @@ static void memswap(void* a, void* b, size_t len)
 	memcpy(a, buf, len);
 	
 	free(buf);
+}
+
+static inline void comp_swap(void* a, void* b, size_t len, int(*comparator)(const void*, const void*))
+{
+	if(comparator(a, b) != 1) return;
+
+	memswap(a, b, len);
 }
 
 static inline bool is_punctuation(wchar_t c) 
@@ -42,6 +49,14 @@ static void quicksort(void *arr, size_t elsize, int l, int r, int(*comparator)(c
 {
 	if (l >= r)
 		return;
+
+	if (r - l <= 3) // Sedgewick
+	{
+		comp_swap(arr + ((l >> 2) + (r >> 2) + (l & r & 1)) * elsize, arr + (r - 1) * elsize, elsize, comparator);
+		comp_swap(arr + (l) * elsize, arr + (r - 1) * elsize, elsize, comparator);
+		comp_swap(arr + (l) * elsize, arr + (r) * elsize, elsize, comparator);
+		comp_swap(arr + (r - 1) * elsize, arr + (r) * elsize, elsize, comparator);
+	}
 
         size_t pivot_index = partition(arr, elsize, l, r, comparator);
 
