@@ -15,7 +15,7 @@ size_t poem_lines = 0;
 wchar_t** poem = NULL;
 
 static const size_t MAX_LINES = 10000;
-static const size_t MAX_LINE_SZ = 256;
+
 static wchar_t* poem_data = NULL;
 
 bool load_poem(const char* poem_path)
@@ -25,23 +25,32 @@ bool load_poem(const char* poem_path)
 		return false;
 
 	struct stat st = {0};
+
 	fstat(fd, &st);
 	off_t sz = st.st_size;
 
-	void* fileptr = mmap(NULL, sz, PROT_READ, MAP_PRIVATE, fd, 0);
+	char* fileptr = (char*)mmap(NULL, sz, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	poem = (wchar_t**)calloc(MAX_LINES, sizeof(wchar_t*));
-	poem_data = (wchar_t*)calloc(sz, sizeof(wchar_t));
+	poem_data = (wchar_t*)calloc(sz + 1, sizeof(wchar_t));
+	if(!poem || !poem_data || !fileptr)
+	{
+		fprintf(stderr, "Memory allocation error!\n");
+		return false;
+	}
+	size_t wchar_len = mbstowcs(poem_data, fileptr, sz);
 
-	char* poem_tmp_buf = (char*)calloc(sz, sizeof(char));
-
-	memcpy(poem_tmp_buf, fileptr, sz);
-	size_t wchar_len = mbstowcs(poem_data, poem_tmp_buf, sz);
-	poem_data = (wchar_t*)realloc(poem_data, wchar_len * sizeof(wchar_t));
+	wchar_t* reallocated_poem_data = (wchar_t*)realloc(poem_data, wchar_len * sizeof(wchar_t));
+	if(!reallocated_poem_data)
+	{
+		fprintf(stderr, "Memory allocation error!\n");
+		return false;
+	}
+	poem_data = reallocated_poem_data;
 
 	munmap(fileptr, sz);
 	close(fd);
-	free(poem_tmp_buf);
+
 
 	// convert newlines to str terminators and store pointers to them 
 	// we can also store strlen of the string in the MSBs of the pointers, so that strlens won't recompute on sort
@@ -61,7 +70,13 @@ bool load_poem(const char* poem_path)
 		cur_len = 0;
 	}
 
-	poem = (wchar_t**)realloc(poem, poem_lines * sizeof(wchar_t*));
+	wchar_t** realloced_poem = (wchar_t**)realloc(poem, poem_lines * sizeof(wchar_t*));
+	if(!realloced_poem)
+	{
+		fprintf(stderr, "Memory allocation error!\n");
+		return false;
+	}
+	poem = realloced_poem;
 
 	return true;
 }

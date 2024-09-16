@@ -16,10 +16,48 @@ static void memswap(void* a, void* b, size_t len)
 	free(buf);
 }
 
+static inline bool is_punctuation(wchar_t c) 
+{
+	return wcschr(L"!\"#$%&'()*+,./:;<=>?@[\\]-—^_`{|}~ «»", c) != NULL;
+}
+
+static inline size_t partition(void *arr, size_t elsize, size_t l, size_t r, int(*comparator)(const void*, const void*)) 
+{
+	void* pivot = arr + r * elsize;
+	size_t i = l - 1;
+
+	for (size_t j = l; j < r; j++) {
+		// if (arr[j] > pivot)
+		if (comparator(arr + j * elsize, pivot) == 1)
+			continue;
+
+		memswap(arr + ++i * elsize, arr + j * elsize, sizeof(int));
+	}
+
+	memswap(arr + ++i * elsize, arr + r * elsize, sizeof(int));
+	return i;
+}
+
+static void quicksort(void *arr, size_t elsize, int l, int r, int(*comparator)(const void*, const void*))
+{
+	if (l >= r)
+		return;
+
+        size_t pivot_index = partition(arr, elsize, l, r, comparator);
+
+        quicksort(arr, elsize, l, pivot_index - 1, comparator);
+        quicksort(arr, elsize, pivot_index + 1, r, comparator);
+}
+
+void quick_sort(void *array, size_t cnt, size_t elsize, int(*comparator)(const void*, const void*))
+{
+	quicksort(array, elsize, 0, cnt - 1, comparator);
+}
+
 // best sorting algo
 // in the best case works faster than any other sorting algorithm
 // patent pending
-void random_sort(wchar_t** ptr, size_t cnt, int(*comparator)(const wchar_t*, const wchar_t*))
+void random_sort(void* array, size_t cnt, size_t elsize, int(*comparator)(const void*, const void*))
 {
 	srand(time(NULL)); // the seed better be good for this one
 
@@ -30,7 +68,7 @@ void random_sort(wchar_t** ptr, size_t cnt, int(*comparator)(const wchar_t*, con
 
 		for(size_t i = 0; i < (cnt - 1); i++)
 		{
-			if(comparator(ptr[i], ptr[i+1]) == 1)
+			if(comparator(array + i * elsize, array + (i+1) * elsize) == 1)
 			{
 				is_sorted = false;
 				break;
@@ -39,16 +77,11 @@ void random_sort(wchar_t** ptr, size_t cnt, int(*comparator)(const wchar_t*, con
 
 		if(is_sorted) break;
 
-		wchar_t** r1 = (ptr + (rand() % cnt));
-		wchar_t** r2 = (ptr + (rand() % cnt));
+		void* r1 = (array + (rand() % cnt) * elsize);
+		void* r2 = (array + (rand() % cnt) * elsize);
 
-		memswap(r1, r2, sizeof(wchar_t*));
+		memswap(r1, r2, elsize);
 	}
-}
-
-static bool is_punctuation(wchar_t c) 
-{
-	return wcschr(L"!\"#$%&'()*+,./:;<=>?@[\\]-—^_`{|}~ «»", c) != NULL;
 }
 
 int str_comparator(const void* in_a, const void* in_b)
