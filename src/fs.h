@@ -5,8 +5,8 @@
 // there is only one poem in the program context.
 extern size_t poem_lines;
 extern wchar_t** poem;
-extern wchar_t* poem_data;
 
 bool load_poem(const char* poem_path);
+bool write_poem(const char* poem_path);
 void unload_poem();
 

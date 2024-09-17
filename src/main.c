@@ -11,6 +11,11 @@
 #include "ptrs.h"
 
 
+/*
+	*
+	* MORE ERROR INFO
+	*/
+
 int main(int argc, char** argv)
 {
 	setlocale(LC_ALL, "ru_RU.UTF-8");
@@ -27,14 +32,13 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	// print_strings((const wchar_t**)poem, poem_lines, "UnSorted Onegin:");
-	// print_strings((const wchar_t**)poem, 15, "UnSorted Onegin:");
-	
 	// qsort(poem, poem_lines, sizeof(wchar_t*), str_comparator);
 	quick_sort(poem, poem_lines, sizeof(wchar_t*), str_comparator);
 	// random_sort(poem, poem_lines, sizeof(char*), str_comparator);
+	
+	print_strings((const wchar_t**)poem, 15, "Sorted Onegin");
 
-	print_strings((const wchar_t**)poem, 15, "Sorted Onegin:");
+	// write_poem("basednegin.txt");
 
 	unload_poem();
 	return 0;

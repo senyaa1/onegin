@@ -5,18 +5,27 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include <stdio.h>
 #include "ptrs.h"
+
+#define SWAPBUF_LEN 4096
 
 static inline void memswap(void* a, void* b, size_t len)
 {
-	void* buf = calloc(len, 1);
+	static char buf[SWAPBUF_LEN] = {0};
 
-	memcpy(buf, b, len);
-	memcpy(b, a, len);
-	memcpy(a, buf, len);
-	
-	free(buf);
+	size_t offset = 0;
+
+	for(int i = 0; i < len / SWAPBUF_LEN + 1; i++)
+	{
+		size_t cur_len = len - offset;
+		if(cur_len > SWAPBUF_LEN) cur_len = SWAPBUF_LEN;
+
+		memcpy(buf, b + offset, cur_len);
+		memcpy(b + offset, a + offset, cur_len);
+		memcpy(a + offset, buf, cur_len);
+
+		offset += cur_len;
+	}
 }
 
 static inline void comp_swap(void* a, void* b, size_t len, int(*comparator)(const void*, const void*))
@@ -31,7 +40,7 @@ static inline bool is_punctuation(wchar_t c)
 	return wcschr(L"!\"#$%&'()*+,./:;<=>?@[\\]-—^_`{|}~ «»", c) != NULL;
 }
 
-static inline size_t partition(void *arr, size_t elsize, size_t l, size_t r, int(*comparator)(const void*, const void*)) 
+static size_t partition(void *arr, size_t elsize, size_t l, size_t r, int(*comparator)(const void*, const void*)) 
 {
 	void* pivot = arr + r * elsize;
 	size_t i = l - 1;
@@ -104,17 +113,19 @@ void random_sort(void* array, size_t cnt, size_t elsize, int(*comparator)(const 
 
 int str_comparator(const void* in_a, const void* in_b)
 {
-	wchar_t* a = *(wchar_t**)(in_a);
-	wchar_t* b = *(wchar_t**)(in_b);
+	wchar_t  *a = *(wchar_t**)(in_a),
+		 *b = *(wchar_t**)(in_b);
 
-	uint16_t len_a = PTR_GETLEN(a), len_b = PTR_GETLEN(b);
+	uint16_t len_a = PTR_GETLEN(a),
+		 len_b = PTR_GETLEN(b);
+
 	a = PTR_STRIP(a);
 	b = PTR_STRIP(b);
 
-	// size_t len_a = wcslen(a), len_b = wcslen(b);
-	size_t min_len = ((len_a < len_b) ? len_a : len_b);
-	size_t a_ptr = 0, b_ptr = 0;
+	size_t	a_ptr = 0, 
+		b_ptr = 0;
 
+	size_t min_len = ((len_a < len_b) ? len_a : len_b);
 	while(a_ptr < min_len && b_ptr < min_len)
 	{
 		while(is_punctuation(a[a_ptr]) && a_ptr < min_len)
@@ -123,7 +134,8 @@ int str_comparator(const void* in_a, const void* in_b)
 		while(is_punctuation(b[b_ptr]) && b_ptr < min_len)
 			b_ptr++;
 
-		wchar_t chr_a = towlower(a[a_ptr]), chr_b = towlower(b[b_ptr]);
+		wchar_t chr_a = towlower(a[a_ptr]),  // ispunct
+			chr_b = towlower(b[b_ptr]);
 
 		if(chr_a == chr_b)
 		{

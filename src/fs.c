@@ -14,10 +14,11 @@
 
 size_t poem_lines = 0;
 wchar_t** poem = NULL;
-wchar_t* poem_data = NULL;
+
+static wchar_t* poem_data = NULL;
+static size_t poem_datalen = 0;
 
 static const size_t MAX_LINES = 10000;
-
 
 bool load_poem(const char* poem_path)
 {
@@ -34,19 +35,22 @@ bool load_poem(const char* poem_path)
 
 	poem = (wchar_t**)calloc(MAX_LINES, sizeof(wchar_t*));
 	poem_data = (wchar_t*)calloc(sz + 1, sizeof(wchar_t));
+
 	if(!poem || !poem_data || !fileptr)
 	{
 		fprintf(stderr, "Memory allocation error!\n");
 		return false;
 	}
-	size_t wchar_len = mbstowcs(poem_data, fileptr, sz);
 
-	wchar_t* reallocated_poem_data = (wchar_t*)realloc(poem_data, wchar_len * sizeof(wchar_t));
+	poem_datalen = mbstowcs(poem_data, fileptr, sz);
+
+	wchar_t* reallocated_poem_data = (wchar_t*)realloc(poem_data, poem_datalen * sizeof(wchar_t));
 	if(!reallocated_poem_data)
 	{
 		fprintf(stderr, "Memory allocation error!\n");
 		return false;
 	}
+
 	poem_data = reallocated_poem_data;
 
 	munmap(fileptr, sz);
@@ -54,9 +58,9 @@ bool load_poem(const char* poem_path)
 
 	size_t cur_len = 0;
 	poem_lines = 0;
-	for(size_t i = 0; i < wchar_len; i++)
+	for(size_t i = 0; i < poem_datalen; i++)
 	{
-		if(poem_data[i] != L'\n')
+		if(poem_data[i] != L'\n' && poem_data[i] != L'\r')
 		{
 			cur_len++;
 			continue;
@@ -77,6 +81,42 @@ bool load_poem(const char* poem_path)
 
 	return true;
 }
+
+// bool write_poem(const char* poem_path)
+// {
+// 	int fd = open(poem_path, O_RDWR | O_CREAT, 0644);
+// 	if (fd == -1)
+// 		return false;
+//
+// 	wcto()
+//
+// 	size_t sz = sizeof(wchar_t) * poem_datalen;
+// 	printf("sz: %ld\n", sz);
+// 	lseek(fd, sz-1, SEEK_SET);
+// 	write(fd, "", 1);
+//
+// 	char *map = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+// 	if (map == MAP_FAILED) 
+// 	{
+// 		perror("mmap");
+// 		close(fd);
+// 		return 1;
+// 	}
+//
+// 	printf("starting to copy\n");
+// 	memcpy(map, poem_data, poem_datalen * sizeof(wchar_t));
+// 	printf("memcopied\n");
+//
+// 	if (msync(map, sz, MS_SYNC) != 0) 
+// 	{
+// 		perror("msync");
+// 	}
+//
+// 	munmap(map, sz);
+// 	close(fd);
+//
+// 	return true;
+// }
 
 void unload_poem()
 {
