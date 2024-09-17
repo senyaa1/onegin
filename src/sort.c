@@ -5,6 +5,9 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#include <stdio.h>
+#include "ptrs.h"
+
 static inline void memswap(void* a, void* b, size_t len)
 {
 	void* buf = calloc(len, 1);
@@ -101,10 +104,14 @@ void random_sort(void* array, size_t cnt, size_t elsize, int(*comparator)(const 
 
 int str_comparator(const void* in_a, const void* in_b)
 {
-	wchar_t* a = *(wchar_t**)in_a;
-	wchar_t* b = *(wchar_t**)in_b;
+	wchar_t* a = *(wchar_t**)(in_a);
+	wchar_t* b = *(wchar_t**)(in_b);
 
-	size_t len_a = wcslen(a), len_b = wcslen(b);
+	uint16_t len_a = PTR_GETLEN(a), len_b = PTR_GETLEN(b);
+	a = PTR_STRIP(a);
+	b = PTR_STRIP(b);
+
+	// size_t len_a = wcslen(a), len_b = wcslen(b);
 	size_t min_len = ((len_a < len_b) ? len_a : len_b);
 	size_t a_ptr = 0, b_ptr = 0;
 

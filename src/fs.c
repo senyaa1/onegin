@@ -10,13 +10,14 @@
 #include <unistd.h>
 
 #include "fs.h"
+#include "ptrs.h"
 
 size_t poem_lines = 0;
 wchar_t** poem = NULL;
+wchar_t* poem_data = NULL;
 
 static const size_t MAX_LINES = 10000;
 
-static wchar_t* poem_data = NULL;
 
 bool load_poem(const char* poem_path)
 {
@@ -51,10 +52,6 @@ bool load_poem(const char* poem_path)
 	munmap(fileptr, sz);
 	close(fd);
 
-
-	// convert newlines to str terminators and store pointers to them 
-	// we can also store strlen of the string in the MSBs of the pointers, so that strlens won't recompute on sort
-	// but for now we leave it as is
 	size_t cur_len = 0;
 	poem_lines = 0;
 	for(size_t i = 0; i < wchar_len; i++)
@@ -64,9 +61,9 @@ bool load_poem(const char* poem_path)
 			cur_len++;
 			continue;
 		}
-
 		poem_data[i] = L'\0';
-		poem[poem_lines++] = poem_data + (i - cur_len);
+
+		poem[poem_lines++] = PTR_PACK((poem_data + (i - cur_len)), cur_len);
 		cur_len = 0;
 	}
 
